@@ -57,12 +57,42 @@
   .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
   .field { margin-bottom: 12px; }
   .field:last-child { margin-bottom: 0; }
-  table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  th, td { padding: 6px 4px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
-  th { font-weight: 600; color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
-  td input { width: 100%; padding: 6px; font-size: 12px; background: transparent; color: var(--fg); border: 1px solid transparent; border-radius: 4px; font-family: inherit; }
-  td input:focus { background: #25252a; border-color: var(--accent); outline: none; }
-  .delete-row { color: var(--danger); background: transparent; border: none; cursor: pointer; padding: 4px 8px; font-size: 18px; line-height: 1; width: auto; margin: 0; }
+  /* Editable observation cards — one per row */
+  #rows { display: flex; flex-direction: column; gap: 10px; }
+  .row-card {
+    background: #18181b;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 14px 12px 14px;
+    position: relative;
+  }
+  .row-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px 10px;
+  }
+  .field-pair { display: flex; flex-direction: column; min-width: 0; }
+  .field-pair label {
+    font-size: 10px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.05em;
+    margin-bottom: 3px; font-weight: 600;
+  }
+  .field-pair input {
+    width: 100%; padding: 9px 10px; font-size: 14px;
+    background: #25252a; color: var(--fg);
+    border: 1px solid var(--border); border-radius: 6px;
+    font-family: inherit;
+  }
+  .field-pair input:focus { outline: none; border-color: var(--accent); }
+  .span-2 { grid-column: span 2; }
+  .span-3 { grid-column: span 3; }
+  .row-delete {
+    position: absolute; top: 6px; right: 6px;
+    width: 32px; height: 32px;
+    background: transparent; border: none; color: var(--danger);
+    font-size: 22px; line-height: 1; cursor: pointer;
+    padding: 0; margin: 0;
+  }
   .transcript-box {
     background: #18181b; padding: 12px; border-radius: 8px;
     font-size: 13px; color: var(--muted); white-space: pre-wrap;
@@ -70,10 +100,13 @@
     border: 1px solid var(--border);
   }
   .hidden { display: none !important; }
-  .row-actions { display: flex; gap: 8px; margin-top: 12px; }
-  .row-actions button { margin-top: 0; }
   details summary { cursor: pointer; color: var(--muted); font-size: 13px; }
-  .scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  /* On wider screens, give each row card more breathing room */
+  @media (min-width: 720px) {
+    .row-grid { grid-template-columns: repeat(6, 1fr); }
+    .span-2 { grid-column: span 2; }
+    .span-3 { grid-column: span 3; }
+  }
 </style>
 </head>
 <body>
@@ -115,27 +148,55 @@
 </div>
 
 <div class="card hidden" id="tableCard">
-  <label>Activity table · tap any cell to edit</label>
-  <div class="scroll-x">
-    <table id="table">
-      <thead>
-        <tr>
-          <th>Time</th>
-          <th>Species</th>
-          <th>Cnt</th>
-          <th>Behaviour</th>
-          <th>Location</th>
-          <th>Dir</th>
-          <th>Notes</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-    </table>
-  </div>
-  <button class="secondary" id="addRowBtn">+ Add row</button>
+  <label>Observations · tap any field to edit</label>
+  <div id="rows"></div>
+  <button class="secondary" id="addRowBtn">+ Add observation</button>
   <button id="downloadBtn">Download .docx</button>
 </div>
+
+<datalist id="species-list">
+  <option value="Common pipistrelle"></option>
+  <option value="Soprano pipistrelle"></option>
+  <option value="Nathusius pipistrelle"></option>
+  <option value="Noctule"></option>
+  <option value="Leisler's bat"></option>
+  <option value="Serotine"></option>
+  <option value="Brown long-eared"></option>
+  <option value="Grey long-eared"></option>
+  <option value="Daubenton's bat"></option>
+  <option value="Natterer's bat"></option>
+  <option value="Whiskered bat"></option>
+  <option value="Brandt's bat"></option>
+  <option value="Bechstein's bat"></option>
+  <option value="Barbastelle"></option>
+  <option value="Greater horseshoe"></option>
+  <option value="Lesser horseshoe"></option>
+  <option value="Alcathoe"></option>
+  <option value="Myotis sp."></option>
+  <option value="Pipistrelle sp."></option>
+  <option value="Unidentified bat"></option>
+</datalist>
+
+<datalist id="behaviour-list">
+  <option value="Foraging"></option>
+  <option value="Commuting"></option>
+  <option value="Flying"></option>
+  <option value="Emerged"></option>
+  <option value="Re-entry"></option>
+  <option value="Social"></option>
+  <option value="Other"></option>
+</datalist>
+
+<datalist id="direction-list">
+  <option value="N"></option>
+  <option value="NE"></option>
+  <option value="E"></option>
+  <option value="SE"></option>
+  <option value="S"></option>
+  <option value="SW"></option>
+  <option value="W"></option>
+  <option value="NW"></option>
+</datalist>
 
 <script>
 document.getElementById('date').valueAsDate = new Date();
@@ -151,32 +212,59 @@ const setStatus = (msg, isError = false) => {
   el.classList.toggle('error', isError);
 };
 
-const COLS = ['time', 'species', 'count', 'behaviour', 'location', 'direction', 'notes'];
+const FIELDS = [
+  { name: 'time',      label: 'Time',      span: 1, placeholder: '21:35', inputmode: 'numeric' },
+  { name: 'species',   label: 'Species',   span: 2, datalist: 'species-list', autocapitalize: 'sentences' },
+  { name: 'count',     label: 'Count',     span: 1, default: '1', inputmode: 'numeric' },
+  { name: 'behaviour', label: 'Behaviour', span: 1, datalist: 'behaviour-list' },
+  { name: 'direction', label: 'Dir',       span: 1, placeholder: 'SE', datalist: 'direction-list' },
+  { name: 'location',  label: 'Location',  span: 3, autocapitalize: 'sentences' },
+  { name: 'notes',     label: 'Notes',     span: 3, autocapitalize: 'sentences' },
+];
 
 function addRow(r = {}) {
-  const tbody = $('tbody');
-  const tr = document.createElement('tr');
-  COLS.forEach(c => {
-    const td = document.createElement('td');
+  const container = $('rows');
+  const card = document.createElement('div');
+  card.className = 'row-card';
+
+  const del = document.createElement('button');
+  del.className = 'row-delete';
+  del.type = 'button';
+  del.textContent = '×';
+  del.setAttribute('aria-label', 'Delete row');
+  del.addEventListener('click', () => card.remove());
+  card.appendChild(del);
+
+  const grid = document.createElement('div');
+  grid.className = 'row-grid';
+  FIELDS.forEach(f => {
+    const fp = document.createElement('div');
+    fp.className = `field-pair span-${f.span}`;
+
+    const lbl = document.createElement('label');
+    lbl.textContent = f.label;
+    fp.appendChild(lbl);
+
     const inp = document.createElement('input');
     inp.type = 'text';
-    inp.value = r[c] || '';
-    inp.dataset.field = c;
-    td.appendChild(inp);
-    tr.appendChild(td);
+    inp.dataset.field = f.name;
+    inp.value = r[f.name] || f.default || '';
+    if (f.placeholder) inp.placeholder = f.placeholder;
+    if (f.inputmode) inp.inputMode = f.inputmode;
+    if (f.datalist) inp.setAttribute('list', f.datalist);
+    if (f.autocapitalize) inp.setAttribute('autocapitalize', f.autocapitalize);
+    inp.setAttribute('autocomplete', 'off');
+    inp.setAttribute('spellcheck', 'false');
+    fp.appendChild(inp);
+
+    grid.appendChild(fp);
   });
-  const tdDel = document.createElement('td');
-  const del = document.createElement('button');
-  del.className = 'delete-row';
-  del.textContent = '×';
-  del.addEventListener('click', () => tr.remove());
-  tdDel.appendChild(del);
-  tr.appendChild(tdDel);
-  tbody.appendChild(tr);
+  card.appendChild(grid);
+  container.appendChild(card);
 }
 
 function renderRows(rows) {
-  $('tbody').innerHTML = '';
+  $('rows').innerHTML = '';
   rows.forEach(r => addRow(r));
 }
 
@@ -225,9 +313,9 @@ $('processBtn').addEventListener('click', async () => {
 
 $('downloadBtn').addEventListener('click', async () => {
   const rows = [];
-  document.querySelectorAll('#tbody tr').forEach(tr => {
+  document.querySelectorAll('#rows .row-card').forEach(card => {
     const row = {};
-    tr.querySelectorAll('input').forEach(inp => { row[inp.dataset.field] = inp.value; });
+    card.querySelectorAll('input[data-field]').forEach(inp => { row[inp.dataset.field] = inp.value; });
     rows.push(row);
   });
   const meta = {
