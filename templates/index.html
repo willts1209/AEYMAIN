@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>AEY — Voice to Survey Table</title>
+<link rel="manifest" href="/static/manifest.json">
+<meta name="theme-color" content="#0f0f10">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AEY">
+<link rel="apple-touch-icon" href="/static/icon-192.png">
+<style>
+  :root {
+    --bg: #0f0f10;
+    --fg: #e8e6e3;
+    --muted: #8a8580;
+    --accent: #c89c5a;
+    --accent-fg: #0f0f10;
+    --card: #1c1c1f;
+    --border: #2a2a2e;
+    --danger: #c8625a;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    padding: 16px;
+    padding-top: max(16px, env(safe-area-inset-top));
+    padding-bottom: max(40px, env(safe-area-inset-bottom));
+    font-size: 16px;
+    line-height: 1.4;
+  }
+  h1 { font-size: 22px; margin: 4px 0 16px 0; font-weight: 700; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  input[type=text], input[type=date], input[type=file] {
+    width: 100%; padding: 12px; font-size: 16px;
+    background: #25252a; color: var(--fg);
+    border: 1px solid var(--border); border-radius: 8px;
+    font-family: inherit;
+  }
+  input:focus { outline: none; border-color: var(--accent); }
+  button {
+    width: 100%; padding: 15px; font-size: 16px; font-weight: 600;
+    background: var(--accent); color: var(--accent-fg);
+    border: none; border-radius: 12px; cursor: pointer;
+    margin-top: 10px; font-family: inherit;
+  }
+  button:disabled { opacity: 0.4; }
+  button.secondary { background: transparent; color: var(--fg); border: 1px solid var(--border); }
+  .status { color: var(--muted); font-size: 14px; margin: 12px 0 4px 0; min-height: 20px; }
+  .status.error { color: var(--danger); }
+  .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .field { margin-bottom: 12px; }
+  .field:last-child { margin-bottom: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { padding: 6px 4px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-weight: 600; color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+  td input { width: 100%; padding: 6px; font-size: 12px; background: transparent; color: var(--fg); border: 1px solid transparent; border-radius: 4px; font-family: inherit; }
+  td input:focus { background: #25252a; border-color: var(--accent); outline: none; }
+  .delete-row { color: var(--danger); background: transparent; border: none; cursor: pointer; padding: 4px 8px; font-size: 18px; line-height: 1; width: auto; margin: 0; }
+  .transcript-box {
+    background: #18181b; padding: 12px; border-radius: 8px;
+    font-size: 13px; color: var(--muted); white-space: pre-wrap;
+    max-height: 160px; overflow-y: auto; margin-top: 12px;
+    border: 1px solid var(--border);
+  }
+  .hidden { display: none !important; }
+  .row-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .row-actions button { margin-top: 0; }
+  details summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+  .scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+</style>
+</head>
+<body>
+
+<h1>AEY · Voice → Table</h1>
+
+<div class="card">
+  <div class="field-grid">
+    <div>
+      <label>Site</label>
+      <input type="text" id="site" placeholder="Smock Mill" autocapitalize="words">
+    </div>
+    <div>
+      <label>Date</label>
+      <input type="date" id="date">
+    </div>
+  </div>
+  <div class="field-grid">
+    <div>
+      <label>Surveyor</label>
+      <input type="text" id="surveyor" placeholder="Name" autocapitalize="words">
+    </div>
+    <div>
+      <label>Type</label>
+      <input type="text" id="survey_type" value="Dusk emergence">
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <label>Audio recording</label>
+  <input type="file" id="audio" accept="audio/*,.m4a,.mp3,.wav,.aac">
+  <button id="processBtn">Process recording</button>
+  <div class="status" id="status"></div>
+  <details id="transcriptDetails" style="margin-top: 8px;" class="hidden">
+    <summary>Show raw transcript</summary>
+    <div class="transcript-box" id="transcriptBox"></div>
+  </details>
+</div>
+
+<div class="card hidden" id="tableCard">
+  <label>Activity table · tap any cell to edit</label>
+  <div class="scroll-x">
+    <table id="table">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Species</th>
+          <th>Cnt</th>
+          <th>Behaviour</th>
+          <th>Location</th>
+          <th>Dir</th>
+          <th>Notes</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <button class="secondary" id="addRowBtn">+ Add row</button>
+  <button id="downloadBtn">Download .docx</button>
+</div>
+
+<script>
+document.getElementById('date').valueAsDate = new Date();
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/static/sw.js').catch(console.error);
+}
+
+const $ = (id) => document.getElementById(id);
+const setStatus = (msg, isError = false) => {
+  const el = $('status');
+  el.textContent = msg;
+  el.classList.toggle('error', isError);
+};
+
+const COLS = ['time', 'species', 'count', 'behaviour', 'location', 'direction', 'notes'];
+
+function addRow(r = {}) {
+  const tbody = $('tbody');
+  const tr = document.createElement('tr');
+  COLS.forEach(c => {
+    const td = document.createElement('td');
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.value = r[c] || '';
+    inp.dataset.field = c;
+    td.appendChild(inp);
+    tr.appendChild(td);
+  });
+  const tdDel = document.createElement('td');
+  const del = document.createElement('button');
+  del.className = 'delete-row';
+  del.textContent = '×';
+  del.addEventListener('click', () => tr.remove());
+  tdDel.appendChild(del);
+  tr.appendChild(tdDel);
+  tbody.appendChild(tr);
+}
+
+function renderRows(rows) {
+  $('tbody').innerHTML = '';
+  rows.forEach(r => addRow(r));
+}
+
+$('addRowBtn').addEventListener('click', () => addRow());
+
+$('processBtn').addEventListener('click', async () => {
+  const file = $('audio').files[0];
+  if (!file) {
+    setStatus('Choose an audio file first.', true);
+    return;
+  }
+
+  const btn = $('processBtn');
+  btn.disabled = true;
+
+  try {
+    setStatus('Transcribing audio (1-2 min for a short clip)...');
+    const fd = new FormData();
+    fd.append('audio', file);
+    const trRes = await fetch('/api/transcribe', { method: 'POST', body: fd });
+    if (!trRes.ok) throw new Error(`transcribe failed (${trRes.status})`);
+    const tr = await trRes.json();
+
+    $('transcriptBox').textContent = tr.transcript;
+    $('transcriptDetails').classList.remove('hidden');
+
+    setStatus('Parsing transcript into rows...');
+    const prRes = await fetch('/api/parse', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ transcript: tr.transcript }),
+    });
+    if (!prRes.ok) throw new Error(`parse failed (${prRes.status})`);
+    const pr = await prRes.json();
+
+    renderRows(pr.rows || []);
+    $('tableCard').classList.remove('hidden');
+    setStatus(`Done — ${(pr.rows || []).length} rows extracted. Review and edit before download.`);
+  } catch (e) {
+    setStatus('Error: ' + e.message, true);
+    console.error(e);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+$('downloadBtn').addEventListener('click', async () => {
+  const rows = [];
+  document.querySelectorAll('#tbody tr').forEach(tr => {
+    const row = {};
+    tr.querySelectorAll('input').forEach(inp => { row[inp.dataset.field] = inp.value; });
+    rows.push(row);
+  });
+  const meta = {
+    site: $('site').value || 'Site',
+    date: $('date').value,
+    surveyor: $('surveyor').value,
+    survey_type: $('survey_type').value,
+  };
+  setStatus('Generating .docx...');
+  try {
+    const res = await fetch('/api/docx', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rows, meta }),
+    });
+    if (!res.ok) throw new Error(`docx failed (${res.status})`);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (meta.site.replace(/\s+/g, '_') || 'bat_survey') + '_activity_log.docx';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    setStatus('.docx downloaded.');
+  } catch (e) {
+    setStatus('Error: ' + e.message, true);
+  }
+});
+</script>
+</body>
+</html>

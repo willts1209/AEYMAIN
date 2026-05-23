@@ -1,0 +1,16 @@
+__pycache__
+*.pyc
+.git
+.gitignore
+.venv
+venv
+.env
+*.docx
+*.m4a
+*.mp3
+*.wav
+make_icons.py
+.idea
+.vscode
+.DS_Store
+README.md
