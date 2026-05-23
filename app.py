@@ -57,12 +57,33 @@ CLAUDE = Anthropic()  # ANTHROPIC_API_KEY
 GROQ = Groq()         # GROQ_API_KEY
 
 
+def get_audio_duration(path: str) -> float:
+    """Audio duration in seconds via ffprobe (ships with ffmpeg)."""
+    result = subprocess.run(
+        [
+            "ffprobe", "-i", path,
+            "-show_entries", "format=duration",
+            "-v", "quiet", "-of", "csv=p=0",
+        ],
+        check=True, capture_output=True, text=True,
+    )
+    return float(result.stdout.strip() or "0")
+
+
 def compress_audio(input_path: str, output_path: str) -> None:
-    """Re-encode to mono 32 kbps @ 16 kHz so we stay under Groq's 25 MB limit
-    even for ~2 hr recordings. Speech quality at 32 kbps mono is fine."""
+    """Strip silences, downmix to mono, compress to fit Groq's 25 MB limit.
+
+    The silenceremove filter drops gaps of ≥0.5s below -40 dB. In a typical
+    UK bat dusk survey this removes 50-70% of the audio (long quiet stretches
+    between observations), which slashes upload time, transcription cost,
+    and Whisper drift risk for long recordings.
+
+    Speech quality at mono 32 kbps / 16 kHz is fine — Whisper's native rate.
+    """
     subprocess.run(
         [
             "ffmpeg", "-y", "-i", input_path,
+            "-af", "silenceremove=stop_periods=-1:stop_duration=0.5:stop_threshold=-40dB",
             "-ac", "1",
             "-b:a", "32k",
             "-ar", "16000",
@@ -71,6 +92,9 @@ def compress_audio(input_path: str, output_path: str) -> None:
         check=True,
         capture_output=True,
     )
+
+
+GROQ_MAX_BYTES = 25 * 1024 * 1024  # Groq's hard limit on /audio/transcriptions
 
 
 # ── Routes ───────────────────────────────────────────────────────────
@@ -100,7 +124,19 @@ def transcribe():
     compressed_path = raw_path + ".compressed.m4a"
 
     try:
+        original_seconds = get_audio_duration(raw_path)
         compress_audio(raw_path, compressed_path)
+        compressed_seconds = get_audio_duration(compressed_path)
+        compressed_size = os.path.getsize(compressed_path)
+
+        if compressed_size > GROQ_MAX_BYTES:
+            return jsonify({
+                "error": (
+                    f"Audio is still {compressed_size / 1024 / 1024:.1f} MB after silence stripping. "
+                    "Groq's hard limit is 25 MB. Chunked transcription is the next feature; for now, "
+                    "split the recording in two and process each half separately."
+                ),
+            }), 413
 
         with open(compressed_path, "rb") as f:
             transcription = GROQ.audio.transcriptions.create(
@@ -112,7 +148,12 @@ def transcribe():
             )
 
         text = transcription if isinstance(transcription, str) else transcription.text
-        return jsonify({"transcript": text.strip()})
+        return jsonify({
+            "transcript": text.strip(),
+            "original_seconds": original_seconds,
+            "compressed_seconds": compressed_seconds,
+            "compressed_bytes": compressed_size,
+        })
     finally:
         for p in (raw_path, compressed_path):
             try:

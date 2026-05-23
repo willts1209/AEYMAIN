@@ -281,17 +281,27 @@ $('processBtn').addEventListener('click', async () => {
   btn.disabled = true;
 
   try {
-    setStatus('Transcribing audio (1-2 min for a short clip)...');
+    setStatus('Compressing audio and stripping silence...');
     const fd = new FormData();
     fd.append('audio', file);
     const trRes = await fetch('/api/transcribe', { method: 'POST', body: fd });
-    if (!trRes.ok) throw new Error(`transcribe failed (${trRes.status})`);
+    if (!trRes.ok) {
+      const err = await trRes.json().catch(() => ({}));
+      throw new Error(err.error || `transcribe failed (${trRes.status})`);
+    }
     const tr = await trRes.json();
 
     $('transcriptBox').textContent = tr.transcript;
     $('transcriptDetails').classList.remove('hidden');
 
-    setStatus('Parsing transcript into rows...');
+    const origMin = tr.original_seconds ? Math.round(tr.original_seconds / 60) : null;
+    const speechMin = tr.compressed_seconds ? Math.round(tr.compressed_seconds / 60) : null;
+    if (origMin !== null && speechMin !== null && origMin > speechMin) {
+      const removedMin = origMin - speechMin;
+      setStatus(`Stripped ${removedMin} min of silence (${origMin} min → ${speechMin} min of speech). Parsing rows...`);
+    } else {
+      setStatus('Parsing transcript into rows...');
+    }
     const prRes = await fetch('/api/parse', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
