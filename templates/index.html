@@ -54,6 +54,38 @@
   button.secondary { background: transparent; color: var(--fg); border: 1px solid var(--border); }
   .status { color: var(--muted); font-size: 14px; margin: 12px 0 4px 0; min-height: 20px; }
   .status.error { color: var(--danger); }
+  .progress {
+    margin-top: 10px;
+    height: 4px;
+    background: #25252a;
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+  }
+  .progress-bar {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width 0.4s ease-out;
+    transform-origin: left center;
+  }
+  .progress-bar.indeterminate {
+    width: 35%;
+    animation: indeterminate 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+  @keyframes indeterminate {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX(360%); }
+  }
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+  }
   .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
   .field { margin-bottom: 12px; }
   .field:last-child { margin-bottom: 0; }
@@ -141,6 +173,13 @@
   <input type="file" id="audio" accept="audio/*,.m4a,.mp3,.wav,.aac">
   <button id="processBtn">Process recording</button>
   <div class="status" id="status"></div>
+  <div class="progress hidden" id="progress">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+  <div class="progress-meta hidden" id="progressMeta">
+    <span id="progressPhase">Working</span>
+    <span id="progressTime">0:00</span>
+  </div>
   <details id="transcriptDetails" style="margin-top: 8px;" class="hidden">
     <summary>Show raw transcript</summary>
     <div class="transcript-box" id="transcriptBox"></div>
@@ -212,6 +251,44 @@ const setStatus = (msg, isError = false) => {
   el.classList.toggle('error', isError);
 };
 
+let progressStart = null;
+let progressTimer = null;
+
+function progressStartUI(phase) {
+  $('progress').classList.remove('hidden');
+  $('progressMeta').classList.remove('hidden');
+  $('progressBar').classList.add('indeterminate');
+  $('progressBar').style.width = '35%';
+  $('progressPhase').textContent = phase;
+  progressStart = Date.now();
+  $('progressTime').textContent = '0:00';
+  if (progressTimer) clearInterval(progressTimer);
+  progressTimer = setInterval(() => {
+    const s = Math.floor((Date.now() - progressStart) / 1000);
+    $('progressTime').textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  }, 250);
+}
+
+function progressPhase(phase) {
+  $('progressPhase').textContent = phase;
+}
+
+function progressEndUI(success = true) {
+  if (progressTimer) { clearInterval(progressTimer); progressTimer = null; }
+  $('progressBar').classList.remove('indeterminate');
+  $('progressBar').style.width = success ? '100%' : '0%';
+  if (success) {
+    setTimeout(() => {
+      $('progress').classList.add('hidden');
+      $('progressMeta').classList.add('hidden');
+      $('progressBar').style.width = '0%';
+    }, 700);
+  } else {
+    $('progress').classList.add('hidden');
+    $('progressMeta').classList.add('hidden');
+  }
+}
+
 const FIELDS = [
   { name: 'time',      label: 'Time',      span: 1, placeholder: '21:35', inputmode: 'numeric' },
   { name: 'species',   label: 'Species',   span: 2, datalist: 'species-list', autocapitalize: 'sentences' },
@@ -279,6 +356,7 @@ $('processBtn').addEventListener('click', async () => {
 
   const btn = $('processBtn');
   btn.disabled = true;
+  progressStartUI('Compressing & transcribing');
 
   try {
     setStatus('Compressing audio and stripping silence...');
@@ -302,6 +380,7 @@ $('processBtn').addEventListener('click', async () => {
     } else {
       setStatus('Parsing transcript into rows...');
     }
+    progressPhase('Parsing rows');
     const prRes = await fetch('/api/parse', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -313,9 +392,11 @@ $('processBtn').addEventListener('click', async () => {
     renderRows(pr.rows || []);
     $('tableCard').classList.remove('hidden');
     setStatus(`Done — ${(pr.rows || []).length} rows extracted. Review and edit before download.`);
+    progressEndUI(true);
   } catch (e) {
     setStatus('Error: ' + e.message, true);
     console.error(e);
+    progressEndUI(false);
   } finally {
     btn.disabled = false;
   }
