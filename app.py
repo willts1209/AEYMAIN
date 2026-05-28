@@ -99,6 +99,11 @@ GROQ_MAX_BYTES = 25 * 1024 * 1024  # Groq's hard limit on /audio/transcriptions
 
 # ── Routes ───────────────────────────────────────────────────────────
 @app.route("/")
+def landing():
+    return render_template("landing.html")
+
+
+@app.route("/app")
 def index():
     return render_template("index.html")
 
@@ -111,6 +116,21 @@ def static_files(filename):
 @app.route("/healthz")
 def healthz():
     return "ok"
+
+
+@app.route("/api/signup", methods=["POST"])
+def signup():
+    """Early-access email signup. Logs to stdout (visible in Render logs).
+    Upgrade to a real datastore once volume warrants it.
+    """
+    data = request.json or {}
+    email = (data.get("email") or "").strip()
+    if not email or "@" not in email:
+        return jsonify({"error": "invalid email"}), 400
+    # stdout shows up in Render's live logs; harvest from there for now.
+    app.logger.info("[SIGNUP] %s", email)
+    print(f"[SIGNUP] {email}", flush=True)
+    return jsonify({"ok": True})
 
 
 @app.route("/api/transcribe", methods=["POST"])

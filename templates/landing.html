@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fieldcast — Voice-first field notes for UK ecologists</title>
+<meta name="description" content="Talk through your survey. Get a structured observation table ready to drop into your report. Built for UK bat surveys.">
+<meta name="theme-color" content="#0f0f10">
+<meta property="og:title" content="Fieldcast — Voice-first field notes for UK ecologists">
+<meta property="og:description" content="Talk through your survey. Get a structured observation table ready to drop into your report.">
+<meta property="og:type" content="website">
+<link rel="apple-touch-icon" href="/static/icon-192.png">
+<style>
+  :root {
+    --bg: #0f0f10;
+    --fg: #e8e6e3;
+    --muted: #8a8580;
+    --accent: #c89c5a;
+    --accent-fg: #0f0f10;
+    --card: #1c1c1f;
+    --border: #2a2a2e;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    font-size: 17px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 32px 22px 64px;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 72px;
+  }
+  .wordmark {
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .wordmark .dot { color: var(--accent); }
+  nav a {
+    font-size: 14px;
+    color: var(--muted);
+    margin-left: 18px;
+  }
+  nav a:hover { color: var(--fg); }
+  .hero h1 {
+    font-size: 44px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin: 0 0 18px;
+    font-weight: 700;
+  }
+  .hero .tagline {
+    font-size: 19px;
+    color: var(--muted);
+    max-width: 540px;
+    margin: 0 0 32px;
+  }
+  .hero .badge {
+    display: inline-block;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    padding: 4px 12px;
+    margin-bottom: 22px;
+  }
+  .cta-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 80px;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 13px 22px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+  }
+  .btn.primary { background: var(--accent); color: var(--accent-fg); }
+  .btn.secondary { background: transparent; color: var(--fg); border: 1px solid var(--border); }
+  .btn:hover { text-decoration: none; opacity: 0.92; }
+  h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin: 0 0 22px;
+    font-weight: 600;
+  }
+  .section { margin-bottom: 72px; }
+  .steps {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .step {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px;
+  }
+  .step .num {
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .step h3 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .step p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 15px;
+  }
+  .why-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .why-list li {
+    padding: 16px 0;
+    border-top: 1px solid var(--border);
+    color: var(--fg);
+  }
+  .why-list li:last-child { border-bottom: 1px solid var(--border); }
+  .why-list li strong {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .why-list li span {
+    color: var(--muted);
+    font-size: 15px;
+  }
+  .signup {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px 22px;
+  }
+  .signup h3 {
+    margin: 0 0 6px;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .signup p {
+    margin: 0 0 18px;
+    color: var(--muted);
+    font-size: 15px;
+  }
+  .signup form {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .signup input[type=email] {
+    flex: 1;
+    min-width: 220px;
+    padding: 13px 14px;
+    font-size: 16px;
+    background: #25252a;
+    color: var(--fg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-family: inherit;
+  }
+  .signup input[type=email]:focus { outline: none; border-color: var(--accent); }
+  .signup button { padding: 13px 22px; }
+  .signup .status {
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 12px;
+    min-height: 18px;
+  }
+  .signup .status.error { color: #c8625a; }
+  .signup .status.success { color: #7fb98a; }
+  footer {
+    margin-top: 72px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  @media (min-width: 640px) {
+    .container { padding: 48px 28px 96px; }
+    .hero h1 { font-size: 56px; }
+    .steps { grid-template-columns: 1fr 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <header>
+    <div class="wordmark">Fieldcast<span class="dot">.</span></div>
+    <nav>
+      <a href="/app">Open app</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="badge">Closed beta · UK bat surveys</div>
+    <h1>Voice-first field notes for UK ecologists.</h1>
+    <p class="tagline">Talk through your survey. Get a structured observation table ready to drop into your Word report. Built for UK bat surveys — more survey types coming.</p>
+    <div class="cta-row">
+      <a class="btn primary" href="/app">Try the demo →</a>
+      <a class="btn secondary" href="#signup">Get early access</a>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>How it works</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="num">01 · Record</div>
+        <h3>Speak as you survey</h3>
+        <p>Voice memo your observations on the way around. Phone in pocket, hands free, no clipboard.</p>
+      </div>
+      <div class="step">
+        <div class="num">02 · Process</div>
+        <h3>Audio in, table out</h3>
+        <p>Upload the recording. Fieldcast transcribes UK bat species, then parses observations into a clean structured table.</p>
+      </div>
+      <div class="step">
+        <div class="num">03 · Polish</div>
+        <h3>Edit and export</h3>
+        <p>Review any rows that need fixing. Copy the table straight into your Word report, or download as .docx.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Why Fieldcast</h2>
+    <ul class="why-list">
+      <li>
+        <strong>Faster than writing, more detail than memory.</strong>
+        <span>Two ecologists tested it against handwritten notes and confirmed the voice transcript captured more detail.</span>
+      </li>
+      <li>
+        <strong>Built for UK species and survey workflows.</strong>
+        <span>17 UK bat species, behaviours, vantage points, sunset times — recognised out of the box. No setup, no template-building.</span>
+      </li>
+      <li>
+        <strong>Drops straight into your Word report.</strong>
+        <span>Copy a paste-ready table or export a .docx. Designed to feed your existing report template, not replace it.</span>
+      </li>
+      <li>
+        <strong>Hands-busy by design.</strong>
+        <span>For surveys where clipboards don't work — emergence, tree PRA, hibernation, anywhere your hands are full.</span>
+      </li>
+    </ul>
+  </section>
+
+  <section class="section" id="signup">
+    <div class="signup">
+      <h3>Get early access.</h3>
+      <p>Closed beta is starting with UK bat consultants. Drop your email and I'll get in touch when there's something to try on your next survey.</p>
+      <form id="signupForm">
+        <input type="email" id="email" name="email" placeholder="you@consultancy.co.uk" required autocomplete="email">
+        <button class="btn primary" type="submit">Request access</button>
+      </form>
+      <div class="status" id="signupStatus"></div>
+    </div>
+  </section>
+
+  <footer>
+    <span>© 2026 Fieldcast</span>
+    <span><a href="mailto:willts1209@gmail.com">willts1209@gmail.com</a></span>
+  </footer>
+
+</div>
+
+<script>
+  document.getElementById('signupForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const status = document.getElementById('signupStatus');
+    const email = document.getElementById('email').value.trim();
+    if (!email) return;
+    status.textContent = 'Sending...';
+    status.className = 'status';
+    try {
+      const res = await fetch('/api/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) throw new Error(`signup failed (${res.status})`);
+      status.textContent = "Thanks — you're on the list. I'll be in touch.";
+      status.className = 'status success';
+      document.getElementById('email').value = '';
+    } catch (err) {
+      status.textContent = 'Something went wrong. Email willts1209@gmail.com instead.';
+      status.className = 'status error';
+    }
+  });
+</script>
+
+</body>
+</html>
