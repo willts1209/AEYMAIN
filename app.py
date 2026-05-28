@@ -24,7 +24,10 @@ from docx import Document
 from docx.enum.table import WD_ALIGN_VERTICAL
 from docx.shared import Cm, Pt
 from flask import Flask, jsonify, render_template, request, send_file, send_from_directory
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from groq import Groq
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 # ── Prompts ──────────────────────────────────────────────────────────
 UK_BAT_PROMPT = (
@@ -53,8 +56,44 @@ Return ONLY a JSON array. No prose, no markdown fences."""
 
 # ── App ──────────────────────────────────────────────────────────────
 app = Flask(__name__)
+
+# Render terminates TLS at its load balancer and forwards via X-Forwarded-For;
+# without ProxyFix every request would appear to come from the proxy and the
+# rate limiter would key everyone to the same bucket.
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
+
 CLAUDE = Anthropic()  # ANTHROPIC_API_KEY
 GROQ = Groq()         # GROQ_API_KEY
+
+# Rate limiter — protects expensive Groq + Claude calls from accidental hammering
+# and adversarial abuse. Storage is in-memory; fine while running on a single
+# gunicorn worker (per Dockerfile). Move to redis:// if we ever scale workers.
+limiter = Limiter(
+    key_func=get_remote_address,
+    app=app,
+    default_limits=["120 per hour", "600 per day"],
+    storage_uri="memory://",
+    strategy="fixed-window",
+)
+
+
+def _global_key() -> str:
+    """Shared bucket key for global caps on the most expensive endpoints."""
+    return "_global_"
+
+
+@app.errorhandler(429)
+def ratelimit_handler(e):
+    # The description includes which limit was hit ("10 per 1 hour" etc).
+    detail = str(e.description) if hasattr(e, "description") else ""
+    return jsonify({
+        "error": (
+            "Rate limit reached. Wait a few minutes and try again. "
+            "If you're a real user hitting this regularly, get in touch: "
+            "willts1209@gmail.com"
+        ),
+        "limit": detail,
+    }), 429
 
 
 def get_audio_duration(path: str) -> float:
@@ -99,26 +138,32 @@ GROQ_MAX_BYTES = 25 * 1024 * 1024  # Groq's hard limit on /audio/transcriptions
 
 # ── Routes ───────────────────────────────────────────────────────────
 @app.route("/")
+@limiter.exempt
 def landing():
     return render_template("landing.html")
 
 
 @app.route("/app")
+@limiter.exempt
 def index():
     return render_template("index.html")
 
 
 @app.route("/static/<path:filename>")
+@limiter.exempt
 def static_files(filename):
     return send_from_directory("static", filename)
 
 
 @app.route("/healthz")
+@limiter.exempt
 def healthz():
     return "ok"
 
 
 @app.route("/api/signup", methods=["POST"])
+@limiter.limit("5 per minute")
+@limiter.limit("30 per day")
 def signup():
     """Early-access email signup. Logs to stdout (visible in Render logs).
     Upgrade to a real datastore once volume warrants it.
@@ -134,6 +179,9 @@ def signup():
 
 
 @app.route("/api/transcribe", methods=["POST"])
+@limiter.limit("10 per hour")
+@limiter.limit("30 per day")
+@limiter.limit("100 per day", key_func=_global_key)  # global cap on Groq spend
 def transcribe():
     audio = request.files["audio"]
     suffix = os.path.splitext(audio.filename)[1] or ".m4a"
@@ -183,6 +231,9 @@ def transcribe():
 
 
 @app.route("/api/parse", methods=["POST"])
+@limiter.limit("15 per hour")
+@limiter.limit("50 per day")
+@limiter.limit("150 per day", key_func=_global_key)  # global cap on Claude spend
 def parse():
     transcript = request.json["transcript"]
     user_msg = f"{PARSE_INSTRUCTIONS}\n\nTranscript:\n\"\"\"\n{transcript}\n\"\"\""
@@ -203,6 +254,8 @@ def parse():
 
 
 @app.route("/api/docx", methods=["POST"])
+@limiter.limit("30 per hour")
+@limiter.limit("100 per day")
 def docx():
     data = request.json
     rows = data["rows"]
