@@ -190,6 +190,7 @@
   <label>Observations · tap any field to edit</label>
   <div id="rows"></div>
   <button class="secondary" id="addRowBtn">+ Add observation</button>
+  <button class="secondary" id="copyBtn">Copy table</button>
   <button id="downloadBtn">Download .docx</button>
 </div>
 
@@ -399,6 +400,69 @@ $('processBtn').addEventListener('click', async () => {
     progressEndUI(false);
   } finally {
     btn.disabled = false;
+  }
+});
+
+function readRows() {
+  const rows = [];
+  document.querySelectorAll('#rows .row-card').forEach(card => {
+    const row = {};
+    card.querySelectorAll('input[data-field]').forEach(inp => { row[inp.dataset.field] = inp.value; });
+    rows.push(row);
+  });
+  return rows;
+}
+
+function escapeHTML(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+const COPY_HEADERS = ['Time', 'Species', 'Count', 'Behaviour', 'Location', 'Direction', 'Notes'];
+const COPY_KEYS = ['time', 'species', 'count', 'behaviour', 'location', 'direction', 'notes'];
+
+function buildTableHTML(rows) {
+  const head = '<tr>' + COPY_HEADERS.map(h => `<th>${h}</th>`).join('') + '</tr>';
+  const body = rows.map(r => {
+    const cells = COPY_KEYS.map(k => escapeHTML(k === 'count' && !r[k] ? '1' : r[k]));
+    return '<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>';
+  }).join('');
+  return `<table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse;font-family:Calibri,Arial,sans-serif;font-size:10pt;"><thead>${head}</thead><tbody>${body}</tbody></table>`;
+}
+
+function buildTablePlain(rows) {
+  const lines = [COPY_HEADERS.join('\t')];
+  rows.forEach(r => {
+    lines.push(COPY_KEYS.map(k => (k === 'count' && !r[k] ? '1' : (r[k] ?? ''))).join('\t'));
+  });
+  return lines.join('\n');
+}
+
+$('copyBtn').addEventListener('click', async () => {
+  const rows = readRows();
+  if (!rows.length) {
+    setStatus('No rows to copy yet.', true);
+    return;
+  }
+  const html = buildTableHTML(rows);
+  const plain = buildTablePlain(rows);
+  try {
+    if (navigator.clipboard && window.ClipboardItem) {
+      await navigator.clipboard.write([new ClipboardItem({
+        'text/html': new Blob([html], { type: 'text/html' }),
+        'text/plain': new Blob([plain], { type: 'text/plain' }),
+      })]);
+    } else if (navigator.clipboard) {
+      await navigator.clipboard.writeText(plain);
+    } else {
+      throw new Error('clipboard not available');
+    }
+    setStatus(`Copied ${rows.length} ${rows.length === 1 ? 'row' : 'rows'} to clipboard. Paste into Word.`);
+  } catch (e) {
+    setStatus('Copy failed: ' + e.message, true);
+    console.error(e);
   }
 });
 
