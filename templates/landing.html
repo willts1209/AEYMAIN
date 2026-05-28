@@ -3,178 +3,260 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fieldcast — Voice-first field notes for UK ecologists</title>
-<meta name="description" content="Talk through your survey. Get a structured observation table ready to drop into your report. Built for UK bat surveys.">
-<meta name="theme-color" content="#0f0f10">
-<meta property="og:title" content="Fieldcast — Voice-first field notes for UK ecologists">
-<meta property="og:description" content="Talk through your survey. Get a structured observation table ready to drop into your report.">
+<title>Fieldcast — Voice notes to bat survey tables</title>
+<meta name="description" content="A tool I built to turn voice memos from UK bat surveys into structured observation tables, ready to drop into a Word report.">
+<meta name="theme-color" content="#fafaf7">
+<meta property="og:title" content="Fieldcast — Voice notes to bat survey tables">
+<meta property="og:description" content="A tool I built to turn voice memos from UK bat surveys into structured tables, ready for your Word report.">
 <meta property="og:type" content="website">
 <link rel="apple-touch-icon" href="/static/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600&display=swap">
 <style>
   :root {
-    --bg: #0f0f10;
-    --fg: #e8e6e3;
-    --muted: #8a8580;
-    --accent: #c89c5a;
-    --accent-fg: #0f0f10;
-    --card: #1c1c1f;
-    --border: #2a2a2e;
+    --bg: #fafaf7;
+    --surface: #ffffff;
+    --border: #e3e0d8;
+    --border-soft: #efece4;
+    --text: #1a1a1a;
+    --text-muted: #5a5752;
+    --text-soft: #7a766f;
+    --accent: #1e3a5f;
+    --accent-hover: #16294a;
+    --success: #2d5a3d;
+    --danger: #9b3a2e;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; padding: 0; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro", system-ui, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
     background: var(--bg);
-    color: var(--fg);
+    color: var(--text);
     font-size: 17px;
-    line-height: 1.55;
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-  a { color: var(--accent); text-decoration: none; }
-  a:hover { text-decoration: underline; }
+  a { color: var(--accent); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:hover { color: var(--accent-hover); }
   .container {
-    max-width: 720px;
+    max-width: 680px;
     margin: 0 auto;
-    padding: 32px 22px 64px;
+    padding: 32px 22px 80px;
   }
   header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 72px;
+    padding-bottom: 32px;
+    margin-bottom: 48px;
+    border-bottom: 1px solid var(--border-soft);
   }
   .wordmark {
-    font-size: 19px;
-    font-weight: 700;
-    letter-spacing: -0.01em;
-  }
-  .wordmark .dot { color: var(--accent); }
-  nav a {
-    font-size: 14px;
-    color: var(--muted);
-    margin-left: 18px;
-  }
-  nav a:hover { color: var(--fg); }
-  .hero h1 {
-    font-size: 44px;
-    line-height: 1.1;
-    letter-spacing: -0.02em;
-    margin: 0 0 18px;
-    font-weight: 700;
-  }
-  .hero .tagline {
-    font-size: 19px;
-    color: var(--muted);
-    max-width: 540px;
-    margin: 0 0 32px;
-  }
-  .hero .badge {
-    display: inline-block;
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--accent);
-    border: 1px solid var(--accent);
-    border-radius: 999px;
-    padding: 4px 12px;
-    margin-bottom: 22px;
-  }
-  .cta-row {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 80px;
-  }
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 13px 22px;
-    border-radius: 10px;
-    font-size: 15px;
-    font-weight: 600;
-    font-family: inherit;
-    cursor: pointer;
-    border: none;
-    text-decoration: none;
-  }
-  .btn.primary { background: var(--accent); color: var(--accent-fg); }
-  .btn.secondary { background: transparent; color: var(--fg); border: 1px solid var(--border); }
-  .btn:hover { text-decoration: none; opacity: 0.92; }
-  h2 {
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--muted);
-    margin: 0 0 22px;
-    font-weight: 600;
-  }
-  .section { margin-bottom: 72px; }
-  .steps {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
-  .step {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 22px;
-  }
-  .step .num {
-    font-size: 12px;
-    color: var(--accent);
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-  .step h3 {
-    margin: 0 0 8px;
-    font-size: 18px;
-    font-weight: 600;
-  }
-  .step p {
-    margin: 0;
-    color: var(--muted);
-    font-size: 15px;
-  }
-  .why-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-  .why-list li {
-    padding: 16px 0;
-    border-top: 1px solid var(--border);
-    color: var(--fg);
-  }
-  .why-list li:last-child { border-bottom: 1px solid var(--border); }
-  .why-list li strong {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 4px;
-  }
-  .why-list li span {
-    color: var(--muted);
-    font-size: 15px;
-  }
-  .signup {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 28px 22px;
-  }
-  .signup h3 {
-    margin: 0 0 6px;
+    font-family: 'Source Serif 4', Georgia, serif;
     font-size: 22px;
     font-weight: 700;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
+    color: var(--text);
+    text-decoration: none;
   }
-  .signup p {
+  .wordmark:hover { color: var(--text); text-decoration: none; }
+  header nav a {
+    font-size: 14px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  header nav a:hover { color: var(--text); }
+  h1, h2, h3 {
+    font-family: 'Source Serif 4', Georgia, serif;
+    color: var(--text);
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+  }
+  h1 {
+    font-size: 36px;
+    font-weight: 700;
+    margin: 0 0 24px;
+  }
+  h2 {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 56px 0 16px;
+  }
+  h3 {
+    font-size: 19px;
+    font-weight: 600;
+    margin: 24px 0 8px;
+  }
+  p {
     margin: 0 0 18px;
-    color: var(--muted);
+    color: var(--text);
+  }
+  p.lead {
+    font-size: 19px;
+    line-height: 1.55;
+    color: var(--text-muted);
+    margin-bottom: 28px;
+  }
+  .hero-figure {
+    margin: 32px 0 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--surface);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .hero-figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .figure-caption {
+    font-size: 13px;
+    color: var(--text-soft);
+    margin: 0 0 32px;
+    text-align: center;
+    font-style: italic;
+  }
+  .inline-figure {
+    margin: 24px auto 28px;
+    max-width: 420px;
+  }
+  .inline-figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--surface);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .inline-figure figcaption {
+    font-size: 13px;
+    color: var(--text-soft);
+    font-style: italic;
+    margin-top: 10px;
+    text-align: center;
+    line-height: 1.5;
+  }
+  .comparison {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin: 24px 0 8px;
+  }
+  .comparison figure {
+    margin: 0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .comparison figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .comparison figcaption {
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border-soft);
+    background: #fbfaf6;
+  }
+  .img-placeholder {
+    background: repeating-linear-gradient(45deg, #f1ede3, #f1ede3 8px, #ece7da 8px, #ece7da 16px);
+    color: var(--text-soft);
+    padding: 60px 20px;
+    text-align: center;
+    font-size: 14px;
+    border: 1px dashed var(--border);
+    border-radius: 4px;
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-style: italic;
+  }
+  ol.steps {
+    padding-left: 0;
+    list-style: none;
+    counter-reset: step;
+  }
+  ol.steps li {
+    padding: 14px 0 14px 44px;
+    border-top: 1px solid var(--border-soft);
+    position: relative;
+    counter-increment: step;
+  }
+  ol.steps li:last-child { border-bottom: 1px solid var(--border-soft); }
+  ol.steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 16px;
+    font-family: 'Source Serif 4', Georgia, serif;
     font-size: 15px;
+    font-weight: 700;
+    color: var(--accent);
+    width: 28px;
+    height: 28px;
+    border: 1.5px solid var(--accent);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  ol.steps li strong {
+    display: block;
+    margin-bottom: 2px;
+    font-weight: 600;
+  }
+  ol.steps li span.body {
+    color: var(--text-muted);
+    font-size: 15px;
+    line-height: 1.55;
+  }
+  .about {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 18px;
+    align-items: flex-start;
+    margin-top: 16px;
+  }
+  .about-photo {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    background: #ece7da;
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+  }
+  .about-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .about-photo-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Source Serif 4', Georgia, serif;
+    color: var(--text-soft);
+    font-size: 24px;
+  }
+  .about-text { font-size: 15px; color: var(--text-muted); line-height: 1.6; }
+  .about-text p { margin: 0 0 10px; color: var(--text-muted); }
+  .about-text p:last-child { margin-bottom: 0; }
+  .signup {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 24px;
+    margin-top: 16px;
+  }
+  .signup p.lead {
+    font-size: 16px;
+    margin-bottom: 16px;
   }
   .signup form {
     display: flex;
@@ -183,40 +265,59 @@
   }
   .signup input[type=email] {
     flex: 1;
-    min-width: 220px;
-    padding: 13px 14px;
-    font-size: 16px;
-    background: #25252a;
-    color: var(--fg);
+    min-width: 200px;
+    padding: 11px 13px;
+    font-size: 15px;
+    background: var(--bg);
+    color: var(--text);
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 4px;
     font-family: inherit;
   }
   .signup input[type=email]:focus { outline: none; border-color: var(--accent); }
-  .signup button { padding: 13px 22px; }
-  .signup .status {
+  .signup button {
+    padding: 11px 18px;
     font-size: 14px;
-    color: var(--muted);
-    margin-top: 12px;
-    min-height: 18px;
+    font-weight: 600;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
   }
-  .signup .status.error { color: #c8625a; }
-  .signup .status.success { color: #7fb98a; }
+  .signup button:hover { background: var(--accent-hover); }
+  .signup .status {
+    font-size: 13px;
+    color: var(--text-soft);
+    margin-top: 12px;
+    min-height: 16px;
+  }
+  .signup .status.error { color: var(--danger); }
+  .signup .status.success { color: var(--success); }
+  .try-link {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 14px;
+    color: var(--text-muted);
+  }
   footer {
-    margin-top: 72px;
-    padding-top: 32px;
-    border-top: 1px solid var(--border);
-    color: var(--muted);
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-soft);
+    color: var(--text-soft);
     font-size: 13px;
     display: flex;
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 10px;
   }
+  footer a { color: var(--text-muted); text-decoration: none; }
+  footer a:hover { color: var(--text); text-decoration: underline; }
   @media (min-width: 640px) {
     .container { padding: 48px 28px 96px; }
-    .hero h1 { font-size: 56px; }
-    .steps { grid-template-columns: 1fr 1fr 1fr; }
+    h1 { font-size: 44px; }
+    .comparison { grid-template-columns: 1fr 1fr; }
   }
 </style>
 </head>
@@ -225,80 +326,89 @@
 <div class="container">
 
   <header>
-    <div class="wordmark">Fieldcast<span class="dot">.</span></div>
+    <a href="/" class="wordmark">Fieldcast</a>
     <nav>
-      <a href="/app">Open app</a>
+      <a href="/app">Open the app →</a>
     </nav>
   </header>
 
-  <section class="hero">
-    <div class="badge">Closed beta · UK bat surveys</div>
-    <h1>Voice-first field notes for UK ecologists.</h1>
-    <p class="tagline">Talk through your survey. Get a structured observation table ready to drop into your Word report. Built for UK bat surveys — more survey types coming.</p>
-    <div class="cta-row">
-      <a class="btn primary" href="/app">Try the demo →</a>
-      <a class="btn secondary" href="#signup">Get early access</a>
-    </div>
-  </section>
+  <h1>I built a tool to turn voice memos into structured bat survey tables.</h1>
 
-  <section class="section">
-    <h2>How it works</h2>
-    <div class="steps">
-      <div class="step">
-        <div class="num">01 · Record</div>
-        <h3>Speak as you survey</h3>
-        <p>Voice memo your observations on the way around. Phone in pocket, hands free, no clipboard.</p>
-      </div>
-      <div class="step">
-        <div class="num">02 · Process</div>
-        <h3>Audio in, table out</h3>
-        <p>Upload the recording. Fieldcast transcribes UK bat species, then parses observations into a clean structured table.</p>
-      </div>
-      <div class="step">
-        <div class="num">03 · Polish</div>
-        <h3>Edit and export</h3>
-        <p>Review any rows that need fixing. Copy the table straight into your Word report, or download as .docx.</p>
-      </div>
-    </div>
-  </section>
+  <p class="lead">
+    Talk through your survey as you walk back to the car. Fieldcast transcribes the audio, recognises UK bat species and behaviours, and gives you a clean observation table you can paste straight into your Word report.
+  </p>
 
-  <section class="section">
-    <h2>Why Fieldcast</h2>
-    <ul class="why-list">
-      <li>
-        <strong>Faster than writing, more detail than memory.</strong>
-        <span>Two ecologists tested it against handwritten notes and confirmed the voice transcript captured more detail.</span>
-      </li>
-      <li>
-        <strong>Built for UK species and survey workflows.</strong>
-        <span>17 UK bat species, behaviours, vantage points, sunset times — recognised out of the box. No setup, no template-building.</span>
-      </li>
-      <li>
-        <strong>Drops straight into your Word report.</strong>
-        <span>Copy a paste-ready table or export a .docx. Designed to feed your existing report template, not replace it.</span>
-      </li>
-      <li>
-        <strong>Hands-busy by design.</strong>
-        <span>For surveys where clipboards don't work — emergence, tree PRA, hibernation, anywhere your hands are full.</span>
-      </li>
-    </ul>
-  </section>
+  <figure class="hero-figure">
+    <img src="/static/img/fieldcast-output.jpg" alt="Screenshot of a Fieldcast-generated Word document showing a bat activity log with columns for time, species, count, behaviour, location, direction, and notes.">
+  </figure>
+  <p class="figure-caption">A real Fieldcast output — 30 minutes of voice memo from one of my own dusk emergence surveys, parsed into an editable table and exported as .docx.</p>
 
-  <section class="section" id="signup">
-    <div class="signup">
-      <h3>Get early access.</h3>
-      <p>Closed beta is starting with UK bat consultants. Drop your email and I'll get in touch when there's something to try on your next survey.</p>
-      <form id="signupForm">
-        <input type="email" id="email" name="email" placeholder="you@consultancy.co.uk" required autocomplete="email">
-        <button class="btn primary" type="submit">Request access</button>
-      </form>
-      <div class="status" id="signupStatus"></div>
+  <h2>Why I built it</h2>
+
+  <p>
+    I'm a junior ecological consultant in the UK doing bat surveys. The workflow most of us use — handwritten notes in the field, then re-typed into Excel or Word back at the desk — is genuinely painful. You lose detail in the rush. You lose time afterwards. And if you're consolidating notes from a team of four surveyors with different handwriting, you lose your mind.
+  </p>
+
+  <figure class="inline-figure">
+    <img src="/static/img/paper-notes.png" alt="A photo of my handwritten paper field notes from a bat survey — sideways shorthand on a piece of A4.">
+    <figcaption>My handwritten notes from the same survey. Quick to scribble at dusk, slow to interpret afterwards — especially if someone else wrote them.</figcaption>
+  </figure>
+
+  <p>
+    I tested Fieldcast against these paper notes on a real bat survey. The auto-generated table matched my own observations almost exactly — and according to my boss (who's been doing this for years), the voice transcript actually captured <em>more</em> detail than I'd written down by hand.
+  </p>
+
+  <h2>How it works</h2>
+
+  <ol class="steps">
+    <li>
+      <strong>Record as you survey.</strong>
+      <span class="body">Voice memo on your phone — iOS Voice Memos, any recorder. Hands free, no clipboard, no screen.</span>
+    </li>
+    <li>
+      <strong>Upload the audio.</strong>
+      <span class="body">Fieldcast transcribes with a model primed on UK bat species, then parses observations into a structured table: time, species, count, behaviour, location, direction, notes.</span>
+    </li>
+    <li>
+      <strong>Review, edit, export.</strong>
+      <span class="body">Check any rows that need fixing. Copy the table straight into your Word report, or download as a .docx.</span>
+    </li>
+  </ol>
+
+  <h2>Who this is for</h2>
+
+  <p>
+    UK ecological consultants doing bat surveys. v1 covers dusk emergence and activity transects, with the same backend ready for PRA, tree PRA, GCN, dormouse, and other UK survey types in the near future. If your hands are full in the field — climbing, holding a torch and binoculars, lifting refugia — Fieldcast is built for you.
+  </p>
+
+  <h2>About me</h2>
+
+  <div class="about">
+    <div class="about-photo">
+      <!-- Replace inner div with <img src="/static/img/me.jpg" alt="Will"> when ready -->
+      <div class="about-photo-placeholder">W</div>
     </div>
-  </section>
+    <div class="about-text">
+      <p>Will — junior ecological consultant, UK. I built Fieldcast because I got tired of re-typing my own field notes and watching colleagues do the same.</p>
+      <p>Currently in closed beta with my own consultancy. Looking for two or three other UK bat ecologists to try it on real surveys.</p>
+    </div>
+  </div>
+
+  <h2>Try it on your next survey</h2>
+
+  <div class="signup">
+    <p class="lead">Drop your email and I'll be in touch when there's space in the beta. No marketing, no spam — one email from me when it's ready.</p>
+    <form id="signupForm">
+      <input type="email" id="email" name="email" placeholder="you@consultancy.co.uk" required autocomplete="email">
+      <button type="submit">Request access</button>
+    </form>
+    <div class="status" id="signupStatus"></div>
+    <a class="try-link" href="/app">Or open the demo now →</a>
+  </div>
 
   <footer>
-    <span>© 2026 Fieldcast</span>
-    <span><a href="mailto:willts1209@gmail.com">willts1209@gmail.com</a></span>
+    <span>© 2026 Fieldcast · Built in the UK</span>
+    <a href="mailto:willts1209@gmail.com">willts1209@gmail.com</a>
   </footer>
 
 </div>
