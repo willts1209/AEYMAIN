@@ -5,59 +5,123 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Fieldcast — Voice to Survey Table</title>
 <link rel="manifest" href="/static/manifest.json">
-<meta name="theme-color" content="#0f0f10">
+<meta name="theme-color" content="#fafaf7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Fieldcast">
 <link rel="apple-touch-icon" href="/static/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600&display=swap">
 <style>
   :root {
-    --bg: #0f0f10;
-    --fg: #e8e6e3;
-    --muted: #8a8580;
-    --accent: #c89c5a;
-    --accent-fg: #0f0f10;
-    --card: #1c1c1f;
-    --border: #2a2a2e;
-    --danger: #c8625a;
+    --bg: #fafaf7;
+    --surface: #ffffff;
+    --subtle: #f4f1ea;
+    --border: #e3e0d8;
+    --border-soft: #efece4;
+    --text: #1a1a1a;
+    --text-muted: #5a5752;
+    --text-soft: #7a766f;
+    --accent: #1e3a5f;
+    --accent-hover: #16294a;
+    --accent-fg: #ffffff;
+    --success: #2d5a3d;
+    --danger: #9b3a2e;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro", system-ui, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro", system-ui, sans-serif;
     background: var(--bg);
-    color: var(--fg);
+    color: var(--text);
     padding: 16px;
     padding-top: max(16px, env(safe-area-inset-top));
     padding-bottom: max(40px, env(safe-area-inset-bottom));
     font-size: 16px;
-    line-height: 1.4;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-  h1 { font-size: 22px; margin: 4px 0 16px 0; font-weight: 700; }
-  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
-  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .app-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding-bottom: 14px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .wordmark {
+    font-family: 'Source Serif 4', Georgia, serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .wordmark .dot { color: var(--accent); }
+  .subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  }
+  label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-soft);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+  }
   input[type=text], input[type=date], input[type=file] {
-    width: 100%; padding: 12px; font-size: 16px;
-    background: #25252a; color: var(--fg);
-    border: 1px solid var(--border); border-radius: 8px;
+    width: 100%;
+    padding: 11px 12px;
+    font-size: 16px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
     font-family: inherit;
   }
   input:focus { outline: none; border-color: var(--accent); }
   button {
-    width: 100%; padding: 15px; font-size: 16px; font-weight: 600;
-    background: var(--accent); color: var(--accent-fg);
-    border: none; border-radius: 12px; cursor: pointer;
-    margin-top: 10px; font-family: inherit;
+    width: 100%;
+    padding: 13px;
+    font-size: 15px;
+    font-weight: 600;
+    background: var(--accent);
+    color: var(--accent-fg);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 10px;
+    font-family: inherit;
+    transition: background 0.15s ease-out;
   }
+  button:hover { background: var(--accent-hover); }
   button:disabled { opacity: 0.4; }
-  button.secondary { background: transparent; color: var(--fg); border: 1px solid var(--border); }
-  .status { color: var(--muted); font-size: 14px; margin: 12px 0 4px 0; min-height: 20px; }
+  button.secondary {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  button.secondary:hover { background: var(--subtle); }
+  .status { color: var(--text-muted); font-size: 14px; margin: 12px 0 4px 0; min-height: 20px; }
   .status.error { color: var(--danger); }
   .progress {
     margin-top: 10px;
     height: 4px;
-    background: #25252a;
+    background: var(--subtle);
     border-radius: 2px;
     overflow: hidden;
     position: relative;
@@ -81,7 +145,7 @@
     display: flex;
     justify-content: space-between;
     font-size: 11px;
-    color: var(--muted);
+    color: var(--text-soft);
     margin-top: 6px;
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.02em;
@@ -92,9 +156,9 @@
   /* Editable observation cards — one per row */
   #rows { display: flex; flex-direction: column; gap: 10px; }
   .row-card {
-    background: #18181b;
+    background: var(--subtle);
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 6px;
     padding: 14px 14px 12px 14px;
     position: relative;
   }
@@ -105,34 +169,55 @@
   }
   .field-pair { display: flex; flex-direction: column; min-width: 0; }
   .field-pair label {
-    font-size: 10px; color: var(--muted);
-    text-transform: uppercase; letter-spacing: 0.05em;
-    margin-bottom: 3px; font-weight: 600;
+    font-size: 10px;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 3px;
+    font-weight: 600;
   }
   .field-pair input {
-    width: 100%; padding: 9px 10px; font-size: 14px;
-    background: #25252a; color: var(--fg);
-    border: 1px solid var(--border); border-radius: 6px;
+    width: 100%;
+    padding: 9px 10px;
+    font-size: 14px;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 4px;
     font-family: inherit;
   }
   .field-pair input:focus { outline: none; border-color: var(--accent); }
   .span-2 { grid-column: span 2; }
   .span-3 { grid-column: span 3; }
   .row-delete {
-    position: absolute; top: 6px; right: 6px;
-    width: 32px; height: 32px;
-    background: transparent; border: none; color: var(--danger);
-    font-size: 22px; line-height: 1; cursor: pointer;
-    padding: 0; margin: 0;
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    color: var(--danger);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
   }
   .transcript-box {
-    background: #18181b; padding: 12px; border-radius: 8px;
-    font-size: 13px; color: var(--muted); white-space: pre-wrap;
-    max-height: 160px; overflow-y: auto; margin-top: 12px;
+    background: var(--subtle);
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--text-muted);
+    white-space: pre-wrap;
+    max-height: 160px;
+    overflow-y: auto;
+    margin-top: 12px;
     border: 1px solid var(--border);
   }
   .hidden { display: none !important; }
-  details summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+  details summary { cursor: pointer; color: var(--text-soft); font-size: 13px; }
   /* On wider screens, give each row card more breathing room */
   @media (min-width: 720px) {
     .row-grid { grid-template-columns: repeat(6, 1fr); }
@@ -143,13 +228,16 @@
 </head>
 <body>
 
-<h1>Fieldcast · Voice → Table</h1>
+<header class="app-header">
+  <a href="/" class="wordmark">Fieldcast<span class="dot">.</span></a>
+  <span class="subtitle">Voice → Table</span>
+</header>
 
 <div class="card">
   <div class="field-grid">
     <div>
       <label>Site</label>
-      <input type="text" id="site" placeholder="Smock Mill" autocapitalize="words">
+      <input type="text" id="site" placeholder="Great Farm Barn" autocapitalize="words">
     </div>
     <div>
       <label>Date</label>
