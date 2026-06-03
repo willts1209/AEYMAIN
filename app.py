@@ -68,7 +68,11 @@ Never add information not in the transcript. Do not annotate your own reasoning 
 
 Per-field rules:
 - One row per distinct observation explicitly described. Split combined statements.
-- time: HH:MM 24-hour if mentioned, else "".
+- time: HH:MM 24-hour if mentioned, else "". For dusk emergence and activity surveys (the default for this app), all observation times fall in the evening (UK ~19:00-23:59). Whisper transcribes spoken evening times in shortened form or with dropped digits ("8:45" for "20:45", "9:43" for "21:43", "1:52" when the leading "2" was dropped from "21:52"). Normalise every parsed time into evening format:
+    * HH 8-12 → add 12 (e.g. "8:45" → "20:45", "10:20" → "22:20", "12:05" → "00:05")
+    * HH 1-7 → likely a dropped leading "2"; interpret as 21:MM-22:MM (e.g. "1:52" → "21:52", "2:30" → "22:30", "3:15" → "23:15")
+    * HH 19-23 → keep as is
+    * Use chronological context if ambiguous: observations later in the transcript should generally have later or equal times.
 - species: see LAW 1 and LAW 2. Abbreviations expand only when used confidently: CP/Pip = Common pipistrelle, SP = Soprano pipistrelle, NP = Nathusius pipistrelle, NO = Noctule, BLE = Brown long-eared. When in doubt: "".
 - count: number as string if mentioned (e.g. "5-8", "2"), else "1".
 - behaviour: one of Foraging, Commuting, Flying, Emerged, Re-entry, Social, Other. "Other" if the transcript only describes movement.
