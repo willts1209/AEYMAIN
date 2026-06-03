@@ -41,16 +41,23 @@ UK_BAT_PROMPT = (
 
 PARSE_INSTRUCTIONS = """You are parsing a UK bat dusk-survey voice transcript into structured rows.
 
-Rules:
-- One row per distinct observation. Split combined statements into multiple rows.
+CRITICAL RULE — NEVER invent or infer information that was not explicitly in the transcript.
+- If the surveyor did NOT say a species name, leave species EMPTY. "A bat" or "bat" alone is NOT a species.
+- Do NOT default to any species (especially not Common pipistrelle or Soprano pipistrelle) when no species was named. Empty is the correct answer.
+- Do NOT default counts, behaviours, locations, or directions if the surveyor didn't mention them. Empty / Other is the correct answer.
+- If the entire transcript contains no actual bat observations (just silence, weather chat, "no calls heard"), return an empty JSON array [].
+
+Per-field rules:
+- One row per distinct observation explicitly described. Split combined statements.
 - time: HH:MM 24-hour if mentioned (e.g. "21:35"), else empty string.
-- species: full UK bat species name. Expand abbreviations: CP/Pip = Common pipistrelle, SP = Soprano pipistrelle, NP = Nathusius pipistrelle, NO = Noctule, BLE = Brown long-eared.
-- count: number as string, default "1".
-- behaviour: one of Foraging, Commuting, Flying, Emerged, Re-entry, Social, Other.
-- location: building side / vantage point / feature where observation occurred.
+- species: full UK bat species name ONLY if the surveyor explicitly names it or uses a clear abbreviation. Expand: CP/Pip = Common pipistrelle, SP = Soprano pipistrelle, NP = Nathusius pipistrelle, NO = Noctule, BLE = Brown long-eared. **If no species is named, the field MUST be empty — never guess.**
+- count: number as string if mentioned (e.g. "5-8", "2"), else "1".
+- behaviour: one of Foraging, Commuting, Flying, Emerged, Re-entry, Social, Other. Use Other if the transcript only describes movement without a clearer category.
+- location: building side / vantage point / feature where observation occurred. Empty if not mentioned.
 - direction: compass direction if mentioned (e.g. "SE", "N"), else empty string.
-- notes: anything else — roost evidence detail, "Consistent", count caveats.
-- If a statement contains a structural detail that looks like roost evidence (emerged from a feature, gap, arch, tile, soffit, etc.), include that detail in notes and prefix with "Possible roost feature: ".
+- notes: anything else — uncertainty ("not calling", "no echolocation heard", "not 100% on ID"), count caveats, environmental conditions, roost evidence.
+- Meta lines ("survey start time", "survey end time", time-only utterances) should be a row with that detail in notes and species/count/behaviour/location/direction left empty.
+- If a statement contains a structural detail that looks like roost evidence (emerged from a feature, gap, arch, tile, soffit, etc.), prefix notes with "Possible roost feature: ".
 
 Return ONLY a JSON array. No prose, no markdown fences."""
 
