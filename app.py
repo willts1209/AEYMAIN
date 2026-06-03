@@ -31,13 +31,16 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 
 # ── Prompts ──────────────────────────────────────────────────────────
 UK_BAT_PROMPT = (
-    "UK bat dusk survey. Species: Common pipistrelle, Soprano pipistrelle, "
-    "Nathusius pipistrelle, Noctule, Leisler's bat, Serotine, Brown long-eared bat, "
-    "Daubenton's bat, Natterer's bat, Whiskered bat, Brandt's bat, Barbastelle, "
-    "Bechstein's bat, Greater horseshoe, Lesser horseshoe, Alcathoe. "
-    "Behaviour: foraging, commuting, emerging, social call, re-entry. "
-    "Locations: north building side, south building side, vantage point, VP1, VP2."
+    "Field notes spoken by a UK ecologist conducting a bat dusk emergence survey. "
+    "The speaker describes bat movements, sightings, times in HH:MM format, "
+    "building sides, compass directions, and behaviour. "
+    "Numbers and times are spoken naturally (e.g. 'twenty-one thirty-three')."
 )
+# Species names are deliberately NOT in this prompt. Listing them primes
+# Whisper to emit those words in low-signal audio (rain, silence, mumbling),
+# which produces phantom species in noisy real-world surveys. Whisper is
+# good enough at UK bat names natively; occasional mis-spellings of an
+# actually-said species are far less harmful than hallucinations.
 
 PARSE_INSTRUCTIONS = """You are parsing a UK bat dusk-survey voice transcript into structured rows.
 
