@@ -41,23 +41,41 @@ UK_BAT_PROMPT = (
 
 PARSE_INSTRUCTIONS = """You are parsing a UK bat dusk-survey voice transcript into structured rows.
 
-CRITICAL RULE — NEVER invent or infer information that was not explicitly in the transcript.
-- If the surveyor did NOT say a species name, leave species EMPTY. "A bat" or "bat" alone is NOT a species.
-- Do NOT default to any species (especially not Common pipistrelle or Soprano pipistrelle) when no species was named. Empty is the correct answer.
-- Do NOT default counts, behaviours, locations, or directions if the surveyor didn't mention them. Empty / Other is the correct answer.
-- If the entire transcript contains no actual bat observations (just silence, weather chat, "no calls heard"), return an empty JSON array [].
+THE THREE LAWS — in priority order. Higher-numbered laws override lower ones.
+
+LAW 1 — Default to empty.
+Every field defaults to "" unless the surveyor states it clearly. Empty is ALWAYS a valid answer.
+- "A bat" / "bat" / "another one" → species is "".
+- Speculative species mentions ("could be a Soprano", "Daubies maybe", "sounded like a Nathusius", "looked like maybe a brown long-eared", "called out as Soprano", "mentioned Nathusius") → species is "" and the guess goes in notes (e.g. "Possibly Soprano pipistrelle").
+- Only populate species when the surveyor uses a definite identifying verb: "Common pip emerged", "saw a Soprano foraging", "Noctule flew past", "identified as Daubenton's", or similar unambiguous confirmation.
+
+LAW 2 — Honour the surveyor's own disclaimers, globally.
+If the transcript contains a global ID disclaimer such as:
+  - "didn't get any confirmed IDs"
+  - "no positive IDs"
+  - "couldn't tell"
+  - "couldn't ID them"
+  - "no calling so couldn't ID"
+  - "weren't able to confirm"
+  - "not sure of any species"
+then ALL rows in the output must have species "" regardless of any earlier speculative mentions. Capture movements, locations, directions, and notes as normal, but the species column is empty across the entire survey. Add a single row at the end with the disclaimer in notes if useful, with species/count/behaviour/location/direction left empty.
+
+LAW 3 — Don't invent.
+Never add information not in the transcript. Do not annotate your own reasoning ("Species called out during survey", "Mentioned near end") — if the species mention was speculative, just put the guess in notes and leave species empty.
 
 Per-field rules:
 - One row per distinct observation explicitly described. Split combined statements.
-- time: HH:MM 24-hour if mentioned (e.g. "21:35"), else empty string.
-- species: full UK bat species name ONLY if the surveyor explicitly names it or uses a clear abbreviation. Expand: CP/Pip = Common pipistrelle, SP = Soprano pipistrelle, NP = Nathusius pipistrelle, NO = Noctule, BLE = Brown long-eared. **If no species is named, the field MUST be empty — never guess.**
+- time: HH:MM 24-hour if mentioned, else "".
+- species: see LAW 1 and LAW 2. Abbreviations expand only when used confidently: CP/Pip = Common pipistrelle, SP = Soprano pipistrelle, NP = Nathusius pipistrelle, NO = Noctule, BLE = Brown long-eared. When in doubt: "".
 - count: number as string if mentioned (e.g. "5-8", "2"), else "1".
-- behaviour: one of Foraging, Commuting, Flying, Emerged, Re-entry, Social, Other. Use Other if the transcript only describes movement without a clearer category.
-- location: building side / vantage point / feature where observation occurred. Empty if not mentioned.
-- direction: compass direction if mentioned (e.g. "SE", "N"), else empty string.
-- notes: anything else — uncertainty ("not calling", "no echolocation heard", "not 100% on ID"), count caveats, environmental conditions, roost evidence.
-- Meta lines ("survey start time", "survey end time", time-only utterances) should be a row with that detail in notes and species/count/behaviour/location/direction left empty.
-- If a statement contains a structural detail that looks like roost evidence (emerged from a feature, gap, arch, tile, soffit, etc.), prefix notes with "Possible roost feature: ".
+- behaviour: one of Foraging, Commuting, Flying, Emerged, Re-entry, Social, Other. "Other" if the transcript only describes movement.
+- location: building side / vantage point / feature where the observation happened. "" if not mentioned.
+- direction: compass direction if mentioned, else "".
+- notes: anything else — uncertainty markers ("not calling", "no echolocation heard"), hedged species guesses ("Possibly Soprano pipistrelle"), count caveats, environmental conditions, roost evidence.
+- Meta lines (survey start/end times, time-only utterances) → a row with the detail in notes and species/count/behaviour/location/direction all "".
+- Roost evidence (emerged from gap/arch/tile/soffit/etc.) → prefix notes with "Possible roost feature: ".
+
+If the transcript contains no actual bat observations at all (pure silence, weather chat, all calls heard but no behavioural detail), return [].
 
 Return ONLY a JSON array. No prose, no markdown fences."""
 
